@@ -1,0 +1,38 @@
+with "../config/vss_rust_config.gpr";
+
+--  with "vss_rust_interop.gpr";  --  FIXME: gprbuild use cargo
+
+library project VSS_Rust is
+
+   for Languages use ("Ada");
+
+   for Library_Name use "vss-rust";
+   --  for Library_Kind use VSS_Common.Library_Kind;
+   --  for Object_Dir use VSS_Common.Object_Dir;
+   --  for Library_Dir use VSS_Common.Library_Dir;
+   --  for Library_Version use Project'Library_Name & ".so." & Vss_Rust_Config.Crate_Version;
+
+   for Source_Dirs use ("../source/ada");
+   for Object_Dir use "../obj/" & Vss_Rust_Config.Build_Profile;
+   for Create_Missing_Dirs use "True";
+   for Library_Dir use "../lib/";
+
+   --  FIXME: static only?
+   type Library_Type_Type is ("relocatable", "static", "static-pic");
+   Library_Type : Library_Type_Type :=
+     external ("VSS_RUST_LIBRARY_TYPE", external ("LIBRARY_TYPE", "static"));
+   for Library_Kind use Library_Type;
+
+   package Compiler is
+      for Default_Switches ("Ada") use Vss_Rust_Config.Ada_Compiler_Switches;
+   end Compiler;
+
+   package Binder is
+      for Switches ("Ada") use ("-Es"); --  Symbolic traceback
+   end Binder;
+
+   package Install is
+      for Artifacts (".") use ("share");
+   end Install;
+
+end Vss_Rust;

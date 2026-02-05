@@ -1,0 +1,51 @@
+--  VSS: Rust interop sub project tests
+
+--  with "../vss_common";
+--  with "../vss_text";
+--  with "vss_test_common";
+with "../config/vss_rust_config.gpr";
+with "../vss_rust";
+
+project VSS_Rust_Tests is
+
+   for Languages use ("Ada");
+   --  for Object_Dir use VSS_Common.Tests_Object_Dir;
+   for Object_Dir use "../../obj/" & Vss_Rust_Config.Build_Profile;
+   for Source_Dirs use
+     ("../../testsuite/rust"
+     );
+   for Main use ("test_1.adb"
+                );
+
+   package Compiler is
+      --  for Switches ("Ada") use VSS_Test_Common.Ada_Compiler_Switches;
+      for Default_Switches ("Ada") use Vss_Rust_Config.Ada_Compiler_Switches;
+      --  for Switches ("hello_world_data.adb") use ("-g", "-O2", "-gnat2022");
+   end Compiler;
+
+   package Binder is
+      for Switches ("Ada") use ("-Wb", "-Es");
+   end Binder;
+
+   package Linker is
+      --  for Required_Switches use (..);
+      for Default_Switches ("Ada") use (
+         --  user libraries:
+         "-L" & Project'Project_Dir & "../../target/debug"
+         -- "-L" & Project'Project_Dir & "../../target/release"
+         , "-lvss_rust_interop"
+         , "-L" & Project'Project_Dir & "../../lib"
+         , "-lvss-rust"
+         --  ...
+         --
+         --  Windows Specific
+         --  system libraries must be bellow:
+         , "-lwinpthread"  --  Mandatory for pthread_rwlock_* support in Rust
+         , "-lws2_32"      --  Required for network sockets (e.g., reqwest)
+         , "-luserenv"     --  Required for system profile and environment calls
+         , "-lntdll"       --  Required for low-level system functions
+         --  , "-lbcrypt"  --  Required if cryptographic/random features are enabled
+         );
+   end Linker;
+
+end VSS_Rust_Tests;

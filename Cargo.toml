@@ -1,0 +1,10 @@
+[package]
+name = "vss-rust-interop"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+path = "source/rust/lib.rs"
+crate-type = ["staticlib"]
+
+[dependencies]
