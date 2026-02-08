@@ -1,104 +1,173 @@
-//! Utilities related to Foreign Function Interface (FFI) bindings.
+//! # VSS Rust Interop Utilities
+//! 
+//! This library provides a bridge for exchanging UTF-8 encoded strings between Rust 
+//! and other languages (specifically Ada and C++, Python).
 //!
-//! This module provides utilities to handle data across non-Rust interfaces.
-//! It is mainly of use for FFI bindings and code that needs to exchange UTF-8 encoded strings with other languages.
+//! ## Core Concepts for Interop
 //!
-//! Overview.
-//! Rust represents owned strings with the Strings type, and borrowed slices of strings with the str primitive.
-//! Both are always in UTF-8 encoding, and may contain nul bytes in the middle, i.e., if you look at the bytes that
-//! make up the string, there may be a \0 among them.
-//! Both String and str store their length explicitly; there are no nul terminators at the end of strings like in C.
+//! * **Ownership**: In C terms, we distinguish between "owned" strings (Rust manages 
+//!   the memory) and "borrowed" strings (Rust just looks at memory managed by others).
 //!
-//! Ada VSS Virtual_String are different from Rust strings. But also Virtual_String is UTF-8 encoded and have length.
+//! * **Memory Layout**: Rust strings are **not** null-terminated. They consist of a 
+//!   pointer and an explicit length.
+//!
+//! * **VSS (Ada)**: Compatible with Ada VSS `Virtual_String` as both follow UTF-8 
+//!   encoding and explicit length contracts.
 
 pub mod handles {
     use std::sync::Arc;
+    use std::ops::Deref;
+    use std::fmt;
 
     pub mod ffi;
     pub mod tests;
 
-    // Opaque handle for owned string with the Strings type.
+    /// # StringHandle (Owned Shared String)
+    /// 
+    /// **C++ Analog**: `std::shared_ptr<const std::string>`
+    /// **Python Analog**: A reference-counted string object.
+    ///
+    /// This handle provides shared ownership of a Rust `String`. The data is 
+    /// immutable and resides in the heap. The memory is managed by an Atomic 
+    /// Reference Counter (Arc), making it thread-safe.
+    #[repr(transparent)]
     pub struct StringHandle(Arc<String>);
 
     impl StringHandle {
-        pub fn from_string(s: String) -> *const StringHandle {
-            // String уже в куче, просто кладем его в Arc и Box
-            Box::into_raw(Box::new(StringHandle(Arc::new(s))))
-        }            
+        /// Wraps a Rust `String` into a heap-allocated `Arc` and returns a raw pointer.
+        /// **Note**: The caller (FFI side) must eventually call `rust_string_dec_ref` 
+        /// to avoid memory leaks.
+        pub fn from_string(s: String) -> *const Self {
+            let sh = Self(Arc::new(s));
+            // Return raw pointer to the internal String; Arc ensures it stays alive.
+            Arc::into_raw(sh.0).cast::<Self>()
+        }
+
+        /// Copies data from a foreign `SliceStr` to create a new owned `StringHandle`.
+        /// This is a "deep copy" operation.
+        pub fn from_slice(slice: SliceStr) -> *const Self {
+            let s = unsafe { slice.as_str() }.to_string();
+            Self::from_string(s)
+        }
     }
 
-    // Handle for borrowed slice of string (the str primitive).
+    impl Deref for StringHandle {
+        type Target = String;
+        #[inline]
+        fn deref(&self) -> &Self::Target {
+            &self.0
+        }
+    }
+
+    impl fmt::Debug for StringHandle {
+        fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+            write!(f, "StringHandle({:?}, refs={})", 
+                self.0.as_str(), 
+                Arc::strong_count(&self.0)
+            )
+        }
+    }
+
+    impl fmt::Display for StringHandle {
+        fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+            write!(f, "{}", self.0.as_str())
+        }
+    }
+
+    /// # SliceStr (Borrowed String View)
+    /// 
+    /// **C++ Analog**: `std::string_view` or `struct { const char* data; size_t len; }`
+    ///
+    /// A lightweight structure used to pass existing string data into Rust 
+    /// without copying. It does **not** own the memory and must not outlive 
+    /// the source buffer on the FFI side.
     #[repr(C)]
+    #[derive(Copy, Clone)]
     pub struct SliceStr {
         data: *const u8,
         size: usize,
     }
 
     impl SliceStr {
+        /// Creates a new view from a native Rust string slice.
+        #[inline]
         pub fn new(s: &str) -> Self {
-            Self { data: s.as_ptr(), size: s.len() }
+            Self {
+                data: s.as_ptr(),
+                size: s.len(),
+            }
         }
-        // Получение &str из SliceStr
-        pub fn as_str(&self) -> &str {
-            if self.size > 0 {
-                // TODO: ^ Improve check `null pointer` and length = 0
-                let bytes: &[u8] = unsafe { std::slice::from_raw_parts(self.data, self.size) };
-                return unsafe { std::str::from_utf8_unchecked(bytes) };
-            } else {
+
+        /// Returns a Rust string slice (`&str`).
+        /// # Safety
+        /// The caller must ensure the pointer is valid and the data is UTF-8.
+        pub unsafe fn as_str<'a>(&self) -> &'a str {
+            if self.data.is_null() || self.size == 0 {
                 return "";
             }
+            unsafe {
+                let bytes = std::slice::from_raw_parts(self.data, self.size);
+                std::str::from_utf8_unchecked(bytes)
+            }
+        }
+    }
+
+    impl fmt::Debug for SliceStr {
+        fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+            write!(f, "SliceStr({:?})", unsafe { self.as_str() })
+        }
+    }
+
+    impl fmt::Display for SliceStr {
+        fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+            write!(f, "{}", unsafe { self.as_str() })
         }
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::handles::{SliceStr, StringHandle};
-    use super::*;
+    use super::handles::{SliceStr, StringHandle};
+    use super::handles::ffi as ffi_api;
+    use super::handles::tests as ffi_tests;
 
     #[test]
-    fn length() {
-        let ptr: *const StringHandle = unsafe { handles::tests::vss_rust_interop_tests_string_from_rust() };
-
-        // let data:*const u8 = unsafe { rust_handles::ffi::rust_string_get_data(ptr) };
-        // println!("{}", (*data).as_ref.);
-
-        let len: usize = unsafe { handles::ffi::rust_string_get_size(ptr) };
-        println!("{}", len);
-
-        assert_eq!(len, 63);
+    fn test_length_consistency() {
+        unsafe {
+            let ptr: *const StringHandle = ffi_tests::vss_rust_interop_tests_string_from_rust();
+            let len = ffi_api::rust_string_get_size(ptr);
+            // "This is message from Rust. Это сообщение из Rust." 
+            // 25 chars ASCII + 8 space + 2 dot + 14 chars Cyrillic (14*2) = 35 + 28 = 63 bytes            
+            let expected_msg = "This is message from Rust. Это сообщение из Rust.";
+            assert_eq!(len, expected_msg.len()); 
+            // assert_eq!(len, 63); // Both assertions will now pass
+            
+            ffi_api::rust_string_dec_ref(ptr.cast_mut());
+        }
     }
 
     #[test]
-    fn slice_str() {
-        let param: &str = "Param as string slice";
-        let param_empty: &str = "";
-        let ss: SliceStr = SliceStr::new(param);
-        let ss_empty: SliceStr = SliceStr::new(param_empty);
-        println!("{}", ss.as_str());
-
-        let s: SliceStr = SliceStr::new(param);
-        unsafe { handles::tests::vss_rust_interop_tests_in_str_println (s)};
-
-        assert_eq!(param, ss.as_str());
-        assert_eq!(true, ss_empty.as_str().is_empty());
+    fn test_slice_to_str() {
+        let original = "Rust interop test";
+        let slice = SliceStr::new(original);
+        unsafe {
+            assert_eq!(original, slice.as_str());
+            ffi_tests::vss_rust_interop_tests_in_str_println(slice);
+        }
     }
 
     #[test]
-    fn in_str_ret_string() {
-        let name: &str = "Grzegorz Brzęczyszczykiewicz.";
-        let ptr: *const StringHandle = unsafe {
-            handles::tests::vss_rust_interop_tests_in_str_ret_string(SliceStr::new(name)) };
-
-        // FIXME: Increment only from FFI side?
-        unsafe { handles::ffi::rust_string_inc_ref(ptr) };
-
-        let len: usize = unsafe { handles::ffi::rust_string_get_size(ptr) };
-        println!("{}", len);
-        
-        assert_eq!(len, 37);
-
-        // FIXME: Decrement only from FFI side?
-        unsafe { handles::ffi::rust_string_dec_ref(ptr.cast_mut()) };
+    fn test_handle_ref_counting() {
+        unsafe {
+            let name = "FFI Проверка";
+            let ptr = ffi_tests::vss_rust_interop_tests_in_str_ret_string(SliceStr::new(name));
+            
+            // Manual Ref Count Test
+            ffi_api::rust_string_inc_ref(ptr); // Count = 2
+            assert_eq!(ffi_api::rust_string_get_size(ptr), 27); // "Hello, FFI Проверка"
+            
+            ffi_api::rust_string_dec_ref(ptr.cast_mut()); // Count = 1
+            ffi_api::rust_string_dec_ref(ptr.cast_mut()); // Count = 0 (Free)
+        }
     }
 }

@@ -5,16 +5,16 @@
 It provides a robust mechanism for sharing string data across the FFI boundary, utilizing a reference-counted handle system that ensures memory safety and stability.
 
 ## Warning - Work in Progress
-FIXME: Rust's handles and reference counting
+TODO: Code review, check and improve Rust's handles and reference counting
 
 **VSS-Rust is in a pre-alpha state.** Please be advised that the internal module hierarchy, type definitions, and public API are unstable and may undergo significant changes without notice.
 
 ## Key Features
 
-- **FIXME: Stable Reference Counting:** Implements a handle-based system (similar to Python's C-API) using Rust's `Arc<T>` and `Box<T>`.
+- **TODO: Stable Reference Counting:** Implements a handle-based system (similar to Python's C-API) using Rust's `Arc<T>`.
 
 - **Zero-Copy Access:** Provides direct pointers to internal UTF-8 buffers for efficient read operations in Ada.
-- **Bi-directional Integration:** Designed specifically to complement the [VSS (VSS String System)](https://github.com/AdaCore/vss-text) ecosystem.
+- **Bi-directional Integration:** Designed specifically to complement the [VSS (Virtual String System)](https://github.com/AdaCore/vss-text) ecosystem.
 
 ## Requirements
 
@@ -97,6 +97,7 @@ package Linker is
       --  user libraries:
       ...              
       --
+      --  Windows Specific
       --  system libraries must be bellow:
       "-lwinpthread",  --  Mandatory for pthread_rwlock_* support in Rust
       "-lws2_32",      --  Required for network sockets (e.g., reqwest)
@@ -108,4 +109,4 @@ end Linker;
 ```
 
 ## License
-This project is licensed under the same terms as [VSS (VSS String System)](https://github.com/AdaCore/vss-text), ensuring compatibility with the Ada String System ecosystem.
+This project is licensed under the same terms as [VSS (Virtual String System)](https://github.com/AdaCore/vss-text), ensuring compatibility with the Ada String System ecosystem.

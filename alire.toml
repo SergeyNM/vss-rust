@@ -1,12 +1,13 @@
 name = "vss_rust"
-description = ""
-version = "0.1.0-dev"
+description = "FFI bindings for UTF-8 string exchange between Rust and Ada VSS"
+version = "0.1.1-dev"
 
 authors = ["Your Name"]
 maintainers = ["Your Name <example@example.com>"]
-licenses = "MIT OR Apache-2.0 WITH LLVM-exception"
-website = ""
-tags = []
+maintainers-logins = ["SergeyNM"]
+licenses = "Apache-2.0"
+website = "https://github.com/SergeyNM/vss-rust"
+tags = ["ffi", "strings", "vss", "rust", "interop"]
 
 project-files = ["gnat/vss_rust.gpr"]
 
