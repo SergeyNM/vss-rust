@@ -4,6 +4,27 @@ with VSS.Implementation.Rust;
 
 package VSS.Implementation.Text_Storages.Rust is
 
+   ----------------------------------------------------------------------------
+   --  @summary VSS Text Storage backed by a Rust String.
+   --
+   --  Rust_Text_Storage is a concrete implementation of Abstract_Text_Storage.
+   --  It wraps a String_Handle to provide a zero-copy bridge between Ada's
+   --  Virtual_String and Rust-managed memory.
+   --
+   --  @description
+   --  This type manages shared ownership of the Rust string. It assumes
+   --  that the provided String_Handle already has an active reference.
+   --
+   --  Memory Management Logic:
+   --  - @b Initialize: Associates the Rust String_Handle with the storage
+   --    instance and provides the memory address to the VSS core.
+   --  - @b Reference: Increments the internal Rust reference counter
+   --    via `String_Inc_Ref` when a new Virtual_String starts using this
+   --    storage.
+   --  - @b Unreference: Decrements the Rust reference counter via
+   --    `String_Dec_Ref`. When the last Virtual_String is destroyed, the
+   --    Rust memory is automatically deallocated.
+   ----------------------------------------------------------------------------
    type Rust_Text_Storage is
      new Abstract_Text_Storage with null record;
 

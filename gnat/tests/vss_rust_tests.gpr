@@ -24,7 +24,7 @@ project VSS_Rust_Tests is
    end Compiler;
 
    package Binder is
-      for Switches ("Ada") use ("-Wb", "-Es");
+      for Switches ("Ada") use ("-W8", "-Es");
    end Binder;
 
    package Linker is

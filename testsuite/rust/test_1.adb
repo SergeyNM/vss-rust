@@ -8,6 +8,7 @@ with VSS.Implementation.Rust.Tests;
 
 procedure test_1 is
 begin
+   --  In_Str_Println
    VSS.Implementation.Rust.Tests.In_Str_Println
      (VSS.Implementation.Rust.To_Slice_Str
         (VSS.Strings.To_Virtual_String ("https://httpbin.org")));
@@ -38,18 +39,6 @@ begin
 
    Ada.Text_IO.New_Line;
 
-   --  FIXME: Strange behavior
-   --  Strange_1 : declare
-   --     Sl : constant VSS.Implementation.Rust.Slice_Str := VSS.Implementation
-   --       .Rust.To_Slice_Str
-   --         (VSS.Strings.To_Virtual_String ("https://httpbin.org"));
-   --         --  (VSS.Strings.To_Virtual_String ("Привет Мир"));
-   --     --  FIXME: Illegal character, Rust print `..httpbin.org`
-   --  begin
-   --     VSS.Implementation.Rust.Tests.In_Str_Println (Sl);
-   --     --  FIXME: Illegal character, Rust print `..
-   --  end Strange_1;
-
    --  String_From_Rust
    declare
       Message : VSS.Strings.Virtual_String;
@@ -67,7 +56,8 @@ begin
            ("This is message from Rust. Это сообщение из Rust."))
       then
          Ada.Wide_Wide_Text_IO.Put_Line
-           ("Starts_With `This is message from Rust`");
+           ("Ada : Starts_With "
+            & "`This is message from Rust. Это сообщение из Rust.`");
       end if;
 
       if Message.Ends_With
@@ -75,7 +65,8 @@ begin
            ("This is message from Rust. Это сообщение из Rust."))
       then
          Ada.Wide_Wide_Text_IO.Put_Line
-           ("Ends_With `This is message from Rust`");
+           ("Ada : Ends_With "
+            & "`This is message from Rust. Это сообщение из Rust.`");
       end if;
 
       Std_Out.Put_Line (Message, Success);
