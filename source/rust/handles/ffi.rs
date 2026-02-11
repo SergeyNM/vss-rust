@@ -47,13 +47,24 @@ pub unsafe extern "C" fn rust_string_get_data(ptr: *const StringHandle) -> *cons
 }
 
 /// Returns the number of bytes in the string.
-/// Note: This is the byte count, not the character count. 
+/// Note: This is the byte count, not the code point count.
 /// Since Rust strings are UTF-8, a single character may take 1 to 4 bytes.
+/// This operation is O(1).
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn rust_string_get_size(ptr: *const StringHandle) -> usize {
     if ptr.is_null() { return 0; }
 
     unsafe { (&*ptr.cast::<String>()).len() }
+}
+
+/// Returns the number of code points in the string (Unicode scalar values).
+/// Note: This is the code point count, not the Grapheme Clusters count.
+/// This operation is O(N) as it requires iterating through the UTF-8 buffer.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn rust_string_get_length(ptr: *const StringHandle) -> usize {
+    if ptr.is_null() { return 0; }
+
+    unsafe { (&*ptr.cast::<String>()).chars().count() }
 }
 
 /// Analogous to Py_INCREF in Python C-API.

@@ -152,12 +152,26 @@ package VSS.Implementation.Rust is
      with Import, Convention => C, External_Name => "rust_string_get_size";
    --
    --  TODO: Improve Docs
-   --  @summary Returns the size of the string in bytes (UTF-8 code units).
+   --  @summary Returns the number of bytes in the string.
    --
-   --  @return The exact length of the buffer, excluding any null terminators
-   --  (standard Rust `str` behavior).
+   --  Note: This is the byte count, not the code point count.
+   --  Since Rust strings are UTF-8, a single character may take 1 to 4 bytes.
+   --
+   --  Complexity: O(1).
    --
    --  fn rust_string_get_size(ptr: *const StringHandle) -> usize
+
+   function String_Get_Length (Ptr : String_Handle) return Interfaces.C.size_t
+     with Import, Convention => C, External_Name => "rust_string_get_length";
+   --  @summary Returns the number of code points in the string.
+   --
+   --  Note: This is the code point count (Unicode scalar values), not the
+   --  Grapheme Clusters count.
+   --
+   --  Complexity: O(N), as it requires iterating through the UTF-8 buffer
+   --  on the Rust side.
+   --
+   --  fn rust_string_get_length(ptr: *const StringHandle) -> usize
 
    -----------------------
    -- To_Virtual_String --

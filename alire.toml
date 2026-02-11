@@ -1,6 +1,6 @@
 name = "vss_rust"
 description = "FFI bindings for UTF-8 string exchange between Rust and Ada VSS"
-version = "0.1.2-dev"
+version = "0.1.3-dev"
 
 authors = ["Your Name"]
 maintainers = ["Your Name <example@example.com>"]

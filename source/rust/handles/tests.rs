@@ -6,8 +6,8 @@ use crate::handles::ffi as ffi_api;
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn vss_rust_interop_tests_in_str_println(s: SliceStr) {
     let s_ref = unsafe { s.as_str() };
-    println!("Rust: Received message: {}", s_ref);
-    println!("Rust: Size in bytes of message is: {}", s_ref.len());
+    println!("Rust: Input   : {}", s_ref);
+    println!("Rust: Byte Len: {}", s_ref.len());
 }
 
 /// Creates an owned StringHandle in Rust and returns it to the host.
@@ -15,7 +15,7 @@ pub unsafe extern "C" fn vss_rust_interop_tests_in_str_println(s: SliceStr) {
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn vss_rust_interop_tests_string_from_rust() -> *const StringHandle {
     let result = String::from("This is message from Rust. Это сообщение из Rust.");
-    println!("Rust: Content of result is: {}", result);
+    println!("Rust: Result  : {}", result);
     StringHandle::from_string(result)
 }
 
@@ -24,10 +24,15 @@ pub unsafe extern "C" fn vss_rust_interop_tests_string_from_rust() -> *const Str
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn vss_rust_interop_tests_in_str_ret_string(s: SliceStr) -> *const StringHandle {
     let s_ref = unsafe { s.as_str() };
-    println!("Rust: Received message: {}", s_ref);
-    
-    let result = format!("Hello, {}", s_ref);
-    println!("Rust: Content of result is: {}", result);
+    println!("Rust: Input   : {}", s_ref);
+
+    let result = if s_ref == "Grzegorz Brzęczyszczykiewicz" {
+        format!("Cześć, Grzegorzu Brzęczyszczykiewiczu, wiem, że jesteś z wioski Chrząszczyżewoszyce.")
+    } else {
+        format!("Hello, {}.", s_ref)
+    };
+
+    println!("Rust: Result  : {}", result);
     StringHandle::from_string(result)
 }
 

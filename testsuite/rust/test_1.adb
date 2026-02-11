@@ -1,5 +1,4 @@
 with Ada.Text_IO;
-with Ada.Wide_Wide_Text_IO;
 
 with VSS.Strings;
 with VSS.Text_Streams.Standards;
@@ -7,6 +6,9 @@ with VSS.Text_Streams.Standards;
 with VSS.Implementation.Rust.Tests;
 
 procedure test_1 is
+   Std_Out : VSS.Text_Streams.Output_Text_Stream'Class :=
+               VSS.Text_Streams.Standards.Standard_Output;
+   Success : Boolean := True;
 begin
    --  In_Str_Println
    VSS.Implementation.Rust.Tests.In_Str_Println
@@ -41,70 +43,57 @@ begin
 
    --  String_From_Rust
    declare
-      Message : VSS.Strings.Virtual_String;
+      Result   : VSS.Strings.Virtual_String;
+      Expected : constant VSS.Strings.Virtual_String :=
+        VSS.Strings.To_Virtual_String
+          ("This is message from Rust. Это сообщение из Rust.");
 
-      Std_Out : VSS.Text_Streams.Output_Text_Stream'Class :=
-                  VSS.Text_Streams.Standards.Standard_Output;
-      Success : Boolean := True;
    begin
-      Message := VSS.Implementation.Rust.To_Virtual_String
+      Result := VSS.Implementation.Rust.To_Virtual_String
         (VSS.Implementation.Rust.Tests.String_From_Rust);
 
-      --  Check `Message`
-      if Message.Starts_With
-        (VSS.Strings.To_Virtual_String
-           ("This is message from Rust. Это сообщение из Rust."))
-      then
-         Ada.Wide_Wide_Text_IO.Put_Line
-           ("Ada : Starts_With "
-            & "`This is message from Rust. Это сообщение из Rust.`");
+      if Result.Starts_With (Expected) then
+         Ada.Text_IO.Put ("Ada : Starts  : ");
+         Std_Out.Put_Line (Expected, Success);
       end if;
 
-      if Message.Ends_With
-        (VSS.Strings.To_Virtual_String
-           ("This is message from Rust. Это сообщение из Rust."))
-      then
-         Ada.Wide_Wide_Text_IO.Put_Line
-           ("Ada : Ends_With "
-            & "`This is message from Rust. Это сообщение из Rust.`");
+      if Result.Ends_With (Expected) then
+         Ada.Text_IO.Put ("Ada : Ends    : ");
+         Std_Out.Put_Line (Expected, Success);
       end if;
 
-      Std_Out.Put_Line (Message, Success);
-      --  FIXME: ^ Blank in output
-      Ada.Text_IO.Put_Line ("Status :" & Success'Image);
-
+      Ada.Text_IO.Put ("Ada : Output  : ");
+      Std_Out.Put_Line (Result, Success);
       Ada.Text_IO.New_Line;
    end;
 
    --  In_Str_Ret_String
    declare
       Argument : constant VSS.Strings.Virtual_String := VSS.Strings
-        .To_Virtual_String ("Grzegorz Brzęczyszczykiewicz.");
-      Message : VSS.Strings.Virtual_String;
+        .To_Virtual_String ("Grzegorz Brzęczyszczykiewicz");
+
+      Result   : VSS.Strings.Virtual_String;
+      Expected : constant VSS.Strings.Virtual_String := VSS.Strings
+      .To_Virtual_String ("Cześć, Grzegorzu Brzęczyszczykiewiczu, wiem,"
+                          & " że jesteś z wioski Chrząszczyżewoszyce.");
+
    begin
-      Message := VSS.Implementation.Rust.To_Virtual_String
+      Result := VSS.Implementation.Rust.To_Virtual_String
         (VSS.Implementation.Rust.Tests.In_Str_Ret_String
            (VSS.Implementation.Rust.To_Slice_Str (Argument)));
 
-      --  Check `Message`
-      if Message.Starts_With
-        (VSS.Strings.To_Virtual_String
-           ("Hello, Grzegorz Brzęczyszczykiewicz."))
-      then
-         Ada.Wide_Wide_Text_IO.Put_Line
-           ("Ada : Starts_With "
-            & "`Hello, Grzegorz Brzęczyszczykiewicz.`");
+      if Result.Starts_With (Expected) then
+         Ada.Text_IO.Put ("Ada : Starts  : ");
+         Std_Out.Put_Line (Expected, Success);
       end if;
 
-      if Message.Ends_With
-        (VSS.Strings.To_Virtual_String
-           ("Hello, Grzegorz Brzęczyszczykiewicz."))
-      then
-         Ada.Wide_Wide_Text_IO.Put_Line
-           ("Ada : Ends_With "
-            & "`Hello, Grzegorz Brzęczyszczykiewicz.`");
+      if Result.Ends_With (Expected) then
+         Ada.Text_IO.Put ("Ada : Ends    : ");
+         Std_Out.Put_Line (Expected, Success);
       end if;
 
+      Ada.Text_IO.Put ("Ada : Output  : ");
+      Std_Out.Put_Line (Result, Success);
       Ada.Text_IO.New_Line;
    end;
 

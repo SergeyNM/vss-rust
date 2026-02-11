@@ -1,3 +1,4 @@
+with VSS.Implementation.Strings;
 with VSS.Implementation.Text_Storages.Rust;
 with VSS.Implementation.UTF8_Strings;
 with VSS.Strings.Internals;
@@ -43,14 +44,9 @@ package body VSS.Implementation.Rust is
          Text.Size   :=
            VSS.Unicode.UTF8_Code_Unit_Offset
              (VSS.Implementation.Rust.String_Get_Size (Object));
-
-         --  Text.Length :=
-         --    VSS.Implementation.Strings.Character_Count
-         --      (VSS.Implementation.Python3.PyUnicode_GetLength (Object));
-         --
-         Text.Length := 0;
-         --  FIXME: Rust not store length in Unicode Code Points.
-
+         Text.Length :=
+           VSS.Implementation.Strings.Character_Count
+             (VSS.Implementation.Rust.String_Get_Length (Object));
          Text.Flags  := 1;
       end;
    end Initialize;

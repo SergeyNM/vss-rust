@@ -164,7 +164,7 @@ mod tests {
             
             // Manual Ref Count Test
             ffi_api::rust_string_inc_ref(ptr); // Count = 2
-            assert_eq!(ffi_api::rust_string_get_size(ptr), 27); // "Hello, FFI Проверка"
+            assert_eq!(ffi_api::rust_string_get_size(ptr), 28); // "Hello, FFI Проверка."
             
             ffi_api::rust_string_dec_ref(ptr.cast_mut()); // Count = 1
             ffi_api::rust_string_dec_ref(ptr.cast_mut()); // Count = 0 (Free)
