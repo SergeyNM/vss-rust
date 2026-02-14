@@ -4,6 +4,9 @@
 
 It provides a robust mechanism for sharing string data across the FFI boundary, utilizing a reference-counted handle system that ensures memory safety and stability.
 
+## 📚 Examples
+For practical integration patterns, including **Asynchronous HTTP client** and **IP inspection**, please visit the [vss-rust-examples](https://github.com/SergeyNM/vss-rust-examples) repository.
+
 ## Warning - Work in Progress
 TODO: Code review, check and improve Rust's handles and reference counting
 
@@ -16,7 +19,7 @@ TODO: Code review, check and improve Rust's handles and reference counting
 - **Zero-Copy Access:** Provides direct pointers to internal UTF-8 buffers for efficient read operations in Ada.
 - **Bi-directional Integration:** Designed specifically to complement the [VSS (Virtual String System)](https://github.com/AdaCore/vss-text) ecosystem.
 
-## Requirements
+## 🛠 Requirements
 
 ### Ada Toolchain
 Ensure you have **Alire** (the Ada Library Manager) and the GNAT toolchain installed.
@@ -50,7 +53,7 @@ The output should indicate `active toolchain: stable-x86_64-pc-windows-gnu`. If 
 rustup default stable-x86_64-pc-windows-gnu
 ```
 
-## Building from Sources
+## 🏗 Building from Sources
 
 ### 1. Clone the repository
 ```bash
@@ -108,5 +111,11 @@ package Linker is
 end Linker;
 ```
 
-## License
+## 🔗 Related Projects
+[vss-rust-examples](https://github.com/SergeyNM/vss-rust-examples) — Practical examples of integrating **Ada** with **Rust** using the **VSS (Virtual String System)** and the interop layer provided by **vss-rust**.
+
+[VSS (Virtual String System)](https://github.com/AdaCore/vss-text) — A high-level, Unicode-aware string and utility library for Ada.
+
+
+## 📜 License
 This project is licensed under the same terms as [VSS (Virtual String System)](https://github.com/AdaCore/vss-text), ensuring compatibility with the Ada String System ecosystem.
